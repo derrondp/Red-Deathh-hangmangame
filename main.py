@@ -9,12 +9,14 @@ letters = letters + letters.lower()
 difficulties = dict(baby=[25, (1, 5)], easy=[10, (3, 7)], normal=[7, (4, 10)], hard=[4, (5, 13)], extreme=[2, (8, 30)])
 dictfile = pathlib.Path("dictionary.txt")
 
+
 print(difficulties)
 print('\n')
 difficulty = input('Enter difficulty: ')
 if difficulty not in difficulties:
     print('Difficulty not found...Switching to default')
     difficulty = 'normal'
+
 
 def generateWord(dictFile, difficulties, difficulty):
     words = []
@@ -29,6 +31,7 @@ def generateWord(dictFile, difficulties, difficulty):
 
     return random.choice(words)
 
+
 def gui(currently, wrong, guess, max):
     print('_' * 40)
     if guess == max:
@@ -39,7 +42,9 @@ def gui(currently, wrong, guess, max):
     print('Current:', ' '.join(currently))
     print('Wrong:', ''.join(wrong))
 
+
 word = generateWord(dictfile, difficulties, difficulty)
+
 
 def guessWord(word_to_guess, max):
     current = ['_' for _ in word_to_guess]
@@ -117,5 +122,6 @@ def guessWord(word_to_guess, max):
                 print(i, end=' ')
                 time.sleep(0.25)
             sys.exit()
+
 
 guessWord(word, difficulties[difficulty][0])
