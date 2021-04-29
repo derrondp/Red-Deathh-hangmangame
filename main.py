@@ -1,17 +1,17 @@
-# This is a sample Python script.
-import sys, pathlib, random, time
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import sys, pathlib, random, time, pickle
 
 letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 letters = letters + letters.lower()
+
+score_dict= {}
+score = 0
+SCORE_FILE = 'scores.txt'
 
 difficulties = dict(baby=[25, (1, 5)], easy=[10, (3, 7)], normal=[7, (4, 10)], hard=[4, (5, 13)], extreme=[2, (8, 30)])
 dictfile = pathlib.Path("dictionary.txt")
 
 
-print(difficulties)
-print('\n')
+print(f"Difficulties: ", difficulties)
 difficulty = input('Enter difficulty: ')
 if difficulty not in difficulties:
     print('Difficulty not found...Switching to default')
@@ -38,19 +38,18 @@ def gui(currently, wrong, guess, max):
         last = 'LAST TRY'
     else:
         last = ''
-    print('Attempt:', str(guess)+'/'+str(max),last)
-    print('Current:', ' '.join(currently))
-    print('Wrong:', ''.join(wrong))
-
-
-word = generateWord(dictfile, difficulties, difficulty)
+    print('Attempts:', str(guess)+'/'+str(max),last)
+    print('Words Guessed:', ' '.join(currently))
+    print('Wrong letters guessed:', ''.join(wrong))
 
 
 def guessWord(word_to_guess, max):
     current = ['_' for _ in word_to_guess]
     badwords = []
     guesses = 0
+    global score
     guessed = []
+    name = str(input("What is your name? ")).lower()
 
     while guesses <= max:
         gui(current, badwords, guesses, max)
@@ -59,7 +58,9 @@ def guessWord(word_to_guess, max):
         if len(usr_input) != 1:
 
             if usr_input == word_to_guess:
-                print('You guessed the word correctly! ', word_to_guess)
+                score += 70
+                print('You guessed the word correctly! ', word_to_guess, 'Your score:', score)
+                save_score(name, score)
                 option = str(input('continue? y/n '))
                 if option.startswith('y') or option.startswith('Y'):
                     print('-----------------------------------')
@@ -70,9 +71,10 @@ def guessWord(word_to_guess, max):
                     for i in txt:
                         print(i, end=' ')
                         time.sleep(0.25)
-                    sys.exit()
+                    welcome()
             else:
                 print('Sorry. That is not the word!')
+                score -= 10
                 guesses += 1
 
         elif usr_input not in letters:
@@ -86,6 +88,7 @@ def guessWord(word_to_guess, max):
 
             if usr_input in word_to_guess:
                 print('Nice! You guessed the right letter! :)')
+                score += 2
                 for word in range(len(word_to_guess)):
                     if word_to_guess[word] == usr_input:
                         current[word] = usr_input
@@ -94,11 +97,15 @@ def guessWord(word_to_guess, max):
                 badwords.append(usr_input)
                 guesses += 1
 
+            
             if '_' not in current:
-                print('You win! The word to guess was', word_to_guess)
+                print("You win! The word was:", word_to_guess)
+                print("Your total score for this game is:", score)
+                save_score(name, score)
                 option = str(input('continue? y/n '))
                 if option.startswith('y') or option.startswith('Y'):
                     print('-----------------------------------')
+                    score = 0
                     newword = generateWord(dictfile, difficulties, difficulty)
                     guessWord(newword, difficulties[difficulty][0])
                 else:
@@ -106,22 +113,111 @@ def guessWord(word_to_guess, max):
                     for i in txt:
                         print(i, end=' ')
                         time.sleep(0.25)
-                    sys.exit()
+                    welcome()
 
     if guesses >= max:
-        print('You lose! The word was:',word_to_guess, ':(')
-
+        print('You lose! The word was:',word_to_guess, ':(', 'Your score:', score)
+        save_score(name, score)
         option = str(input('continue? y/n '))
         if option.startswith('y') or option.startswith('Y'):
             print('-----------------------------------')
+            score = 0
             newword = generateWord(dictfile, difficulties, difficulty)
             guessWord(newword, difficulties[difficulty][0])
         else:
-            txt = 'GAME OVER'
+            txt = 'GAME OVER\n'
             for i in txt:
                 print(i, end=' ')
                 time.sleep(0.25)
+
+            welcome()
+
+    
+word = generateWord(dictfile, difficulties, difficulty)
+
+
+def get_score(name):
+    if pathlib.Path(SCORE_FILE).exists():
+        with open(SCORE_FILE, 'rb') as file:
+            score_dict = pickle.load(file)
+    
+            if name in score_dict:
+                return score_dict[name]
+            else:
+                return 0
+    else:
+        print("SCORE FILE DOES NOT EXIST!")
+
+
+def save_score(name, score):
+    global score_dict
+
+    if pathlib.Path(SCORE_FILE).exists():
+        with open(SCORE_FILE, 'rb') as file:
+            dic = pickle.load(file)
+            
+        if name in dic:
+            if dic[name] < score:
+                option = input("A new Personal Best! Save score? (y/n) ")
+                if option.lower().startswith("y"):
+                    dic[name] = score
+                    with open(SCORE_FILE, 'wb') as file:
+                        pickle.dump(dic, file)
+                    print("Ok! Saved")
+                
+                else:
+                    pass
+        
+            elif dic[name] > score:
+                pass
+
+            else:
+                pass
+        else:
+            dic[name] = score
+            with open(SCORE_FILE, 'wb') as file:
+                pickle.dump(dic, file)
+                print("Ok! Saved")
+
+    
+    else:
+        print("Score file does not exist! Creating Now...")
+        with open(SCORE_FILE, 'wb') as file:
+            pickle.dump(score_dict, file)
+        print("Score saved!")
+    
+
+def view_scores():
+    if pathlib.Path(SCORE_FILE).exists():
+        with open(SCORE_FILE, 'rb') as file:
+            score_dict = pickle.load(file)
+        
+        for k, v in score_dict.items():
+            print(f"{k}\t\t{v}")
+    
+    else:
+        print("Score file does not exist!... You need to save a score first")
+
+
+def welcome():
+    print("\nWelcome to Hangman")
+    while True:
+        print("Do you want to Play (p) View the leaderboard (l) or quit (q): ")
+        choice = input()
+        if choice == 'p':
+            guessWord(word, difficulties[difficulty][0])
+
+
+        elif choice == 'l':
+            print()
+            print("Score\t\tName")
+            view_scores()
+
+        elif choice == 'q':
+            import sys
             sys.exit()
+        
+        else:
+            print("Invalid choice!")
 
-
-guessWord(word, difficulties[difficulty][0])
+welcome()
