@@ -4,6 +4,7 @@ letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 letters = letters + letters.lower()
 
 score_dict= {}
+global score
 score = 0
 SCORE_FILE = 'scores.txt'
 
@@ -32,27 +33,28 @@ def generateWord(dictFile, difficulties, difficulty):
     return random.choice(words)
 
 
-def gui(currently, wrong, guess, max):
+def gui(currently, wrong, guess, max, score):
     print('_' * 40)
     if guess == max:
         last = 'LAST TRY'
     else:
         last = ''
+
+    print("Score:",str(score))
     print('Attempts:', str(guess)+'/'+str(max),last)
     print('Words Guessed:', ' '.join(currently))
     print('Wrong letters guessed:', ''.join(wrong))
 
 
-def guessWord(word_to_guess, max):
+def guessWord(word_to_guess, max, score):
     current = ['_' for _ in word_to_guess]
     badwords = []
     guesses = 0
-    global score
     guessed = []
     name = str(input("What is your name? ")).lower()
 
     while guesses <= max:
-        gui(current, badwords, guesses, max)
+        gui(current, badwords, guesses, max, score)
         usr_input = input('>>> ')
 
         if len(usr_input) != 1:
@@ -205,12 +207,12 @@ def welcome():
         print("Do you want to Play (p) View the leaderboard (l) or quit (q): ")
         choice = input()
         if choice == 'p':
-            guessWord(word, difficulties[difficulty][0])
+            guessWord(word, difficulties[difficulty][0], score)
 
 
         elif choice == 'l':
             print()
-            print("Score\t\tName")
+            print("Name\t\tScore")
             view_scores()
 
         elif choice == 'q':
